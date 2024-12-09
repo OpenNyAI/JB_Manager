@@ -1,0 +1,11 @@
+resources:
+  - name: api-gateway
+    type: apigateway.googleapis.com/API
+    properties:
+      displayName: my-api-gateway
+
+  - name: pubsub-topic
+    type: pubsub.googleapis.com/Topic
+    properties:
+      topic: my-event-hub-topic
+

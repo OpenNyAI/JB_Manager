@@ -1,0 +1,17 @@
+Resources:
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MyEventHubTopic
+
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: MyEventHubQueue
+
+  Subscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt SQSQueue.Arn
+      Protocol: sqs
+      TopicArn: !Ref SNSTopic

@@ -1,0 +1,6 @@
+resources:
+  - name: storage-bucket
+    type: storage.googleapis.com/Bucket
+    properties:
+      location: us-central1
+      storageClass: STANDARD

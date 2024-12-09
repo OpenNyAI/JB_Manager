@@ -1,0 +1,5 @@
+imports:
+  - path: ./gcp-services-template.yaml
+  - path: ./gcp-eventhub-template.yaml
+  - path: ./gcp-postgres-template.yaml
+  - path: ./gcp-storage-template.yaml

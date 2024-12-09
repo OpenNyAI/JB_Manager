@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ServicesTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./aws-services-template.yaml
+
+  EventHubTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./aws-eventhub-template.yaml
+
+  PostgresTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./aws-postgres-template.yaml
+
+  StorageTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./aws-storage-template.yaml

@@ -1,0 +1,10 @@
+Resources:
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: MyApiGateway
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MyEventHubTopic

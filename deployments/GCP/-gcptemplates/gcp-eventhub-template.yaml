@@ -1,0 +1,11 @@
+resources:
+  - name: pubsub-topic
+    type: pubsub.googleapis.com/Topic
+    properties:
+      topic: my-event-hub-topic
+
+  - name: pubsub-subscription
+    type: pubsub.googleapis.com/Subscription
+    properties:
+      topic: $(ref.pubsub-topic.name)
+      subscription: my-event-hub-subscription

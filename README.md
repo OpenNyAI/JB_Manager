@@ -4,10 +4,14 @@
 
 # Jugalbandi Manager
 
-Jugalbandi (JB) Manager is a full AI-powered conversational chatbot platform. It's platform agnostic and can serve multiple channels such as WhatsApp or custom web interfaces. It can handle conversations in both text and voice across any language. It comes with Bhashini Speech models out of the box and can failover to Azure.
+Jugalbandi (JB) Manager is a full AI-powered conversational chatbot platform. It's platform agnostic and can serve multiple channels such as WhatsApp, Telegram or custom web interfaces. It can handle conversations in both text and voice across any language. It comes with Bhashini Speech models out of the box and can failover to Azure. An example built bots snapshot is given below:
 
 ![](docs/assets/jb-manager.png)
 
-See [Quickstart Guide](https://docs.jugalbandi.opennyai.org/building-with-jugalbandi/technical-guide/tutorials/quickstart)
+## Getting started
 
-Read the full documentation [here](https://docs.jugalbandi.opennyai.org/)
+- To get started with the development, check out the [Quickstart Guide](https://docs.jugalbandi.opennyai.org/building-with-jugalbandi/technical-guide/tutorials/quickstart)
+
+- To read the full documentation, check out the [Full documentation](https://docs.jugalbandi.opennyai.org/)
+
+- To contribute to the repository, please check out our [Contributing Guidelines](CONTRIBUTING.md).

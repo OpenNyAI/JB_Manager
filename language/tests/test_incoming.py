@@ -109,3 +109,35 @@ async def test_handle_input_audio_message():
     assert result.user_input.message.message_type == MessageType.TEXT
     assert result.user_input.message.text is not None
     assert result.user_input.message.text.body == "Translated audio message"
+
+@pytest.mark.asyncio
+async def test_handle_input_when_message_type_is_text_but_no_text_content_provided():
+    mock_extension.reset_mock()
+
+    preferred_language = LanguageCodes.EN
+    turn_id = "turn1"
+
+    message = MagicMock()
+    message.message_type.return_value = MessageType.TEXT
+    message.text.return_value = None
+
+    with pytest.raises(ValueError) as exception_info:
+        await handle_input(turn_id, preferred_language, message)
+        
+        assert exception_info.value == "Message text is empty"
+
+@pytest.mark.asyncio
+async def test_handle_input_when_message_type_is_audio_but_no_audio_content_provided():
+    mock_extension.reset_mock()
+
+    preferred_language = LanguageCodes.EN
+    turn_id = "turn1"
+
+    message = MagicMock()
+    message.message_type.return_value = MessageType.AUDIO
+    message.audio.return_value = None
+
+    with pytest.raises(ValueError) as exception_info:
+        await handle_input(turn_id, preferred_language, message)
+        
+        assert exception_info.value == "Message audio is empty"

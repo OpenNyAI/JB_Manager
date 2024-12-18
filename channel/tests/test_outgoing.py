@@ -152,3 +152,64 @@ async def test_send_message_to_user(message):
         channel=mock_channel, user=mock_user, message=message
     )
     mock_create_message.assert_called_once()
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "message",
+    list(test_messages.values()),
+    ids=list(test_messages.keys()),
+)
+async def test_send_message_to_user_jb_user_not_found(message):
+    mock_channel = MagicMock(
+        app_id="test_number",
+        key="encrypted_credentials",
+        type="pinnacle_whatsapp",
+        url="https://api.pinnacle.com",
+    )
+
+    mock_get_user_by_turn_id = AsyncMock(return_value=None)
+    mock_get_channel_by_turn_id = AsyncMock(return_value=mock_channel)
+    mock_send_message = MagicMock()
+    mock_create_message = AsyncMock()
+
+    turn_id = "test_turn_id"
+
+    with patch("src.handlers.outgoing.get_user_by_turn_id", mock_get_user_by_turn_id):
+        with patch(
+            "src.handlers.outgoing.get_channel_by_turn_id", mock_get_channel_by_turn_id
+        ):
+            with patch(
+                "lib.channel_handler.pinnacle_whatsapp_handler.PinnacleWhatsappHandler.send_message",
+                mock_send_message,
+            ):
+                with patch("src.handlers.outgoing.create_message", mock_create_message):
+                    await send_message_to_user(turn_id=turn_id, message=message)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "message",
+    list(test_messages.values()),
+    ids=list(test_messages.keys()),
+)
+async def test_send_message_to_user_jb_channel_not_found(message):
+    mock_user = MagicMock(
+        identifier="1234567890",
+    )
+
+    mock_get_user_by_turn_id = AsyncMock(return_value=mock_user)
+    mock_get_channel_by_turn_id = AsyncMock(return_value=None)
+    mock_send_message = MagicMock()
+    mock_create_message = AsyncMock()
+
+    turn_id = "test_turn_id"
+
+    with patch("src.handlers.outgoing.get_user_by_turn_id", mock_get_user_by_turn_id):
+        with patch(
+            "src.handlers.outgoing.get_channel_by_turn_id", mock_get_channel_by_turn_id
+        ):
+            with patch(
+                "lib.channel_handler.pinnacle_whatsapp_handler.PinnacleWhatsappHandler.send_message",
+                mock_send_message,
+            ):
+                with patch("src.handlers.outgoing.create_message", mock_create_message):
+                    await send_message_to_user(turn_id=turn_id, message=message)

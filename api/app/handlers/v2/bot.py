@@ -32,6 +32,7 @@ async def install(install_content: JBBotCode) -> Flow:
                 fsm_code=install_content.code,
                 requirements_txt=install_content.requirements,
                 index_urls=install_content.index_urls,
+                version = bot.version
             ),
         ),
     )

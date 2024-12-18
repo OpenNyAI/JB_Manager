@@ -164,3 +164,32 @@ async def test_handle_output_button_message():
     assert result[1].bot_output.message_type == MessageType.AUDIO
     assert result[1].bot_output.audio is not None
     assert result[1].bot_output.audio.media_url == "https://storage.url/test_audio.ogg"
+
+
+@pytest.mark.asyncio
+async def test_handle_output_text_message_with_header_and_footer():
+    mock_extension.reset_mock()
+    turn_id = "turn1"
+    preferred_language = LanguageCodes.EN
+    message = Message(
+        message_type=MessageType.TEXT,
+        text=TextMessage(header="test_header",body="hello",footer="test_footer"),
+    )
+    result = await handle_output(turn_id, preferred_language, message)
+
+    assert isinstance(result, list)
+    assert len(result) == 2
+    assert isinstance(result[0], Channel)
+    assert result[0].turn_id == turn_id
+    assert result[0].bot_output is not None
+    assert result[0].bot_output.message_type == MessageType.TEXT
+    assert result[0].bot_output.text is not None
+    assert result[0].bot_output.text.header == "translated_test_header"
+    assert result[0].bot_output.text.body == "translated_hello"
+    assert result[0].bot_output.text.footer == "translated_test_footer"
+    assert isinstance(result[1], Channel)
+    assert result[1].turn_id == turn_id
+    assert result[1].bot_output is not None
+    assert result[1].bot_output.message_type == MessageType.AUDIO
+    assert result[1].bot_output.audio is not None
+    assert result[1].bot_output.audio.media_url == "https://storage.url/test_audio.ogg"

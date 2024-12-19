@@ -17,6 +17,7 @@ pydantic-settings = "^2.1.0"
 alembic = "^1.13.1"
 psycopg2-binary = "^2.9.9"
 aiohttp = "^3.10.0"
+google-cloud-storage = "^2.18.2"
 
 [tool.poetry.group.test]
 

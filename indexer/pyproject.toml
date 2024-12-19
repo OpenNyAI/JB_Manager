@@ -23,6 +23,7 @@ psycopg = {extras = ["binary", "pool"], version = "^3.1.19"}
 pymupdf = "^1.24.5"
 langchain-community = "^0.2.7"
 r2r = "^0.2.78"
+google-cloud-storage = "^2.18.2"
 
 [tool.poetry.group.dev.dependencies]
 lib = {path = "../jb-lib", develop = true}

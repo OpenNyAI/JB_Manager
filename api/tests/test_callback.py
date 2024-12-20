@@ -4,6 +4,8 @@ import pytest
 from lib.data_models import (
     Channel,
     ChannelIntent,
+    Logger,
+    APILogger,
 )
 
 from lib.channel_handler import PinnacleWhatsappHandler
@@ -78,6 +80,7 @@ async def test_text_message(
 
     # Assertions
     assert len(result) == 1
+    logger_result = result[0][2]
     assert result[0][0] is None
     result = result[0][1]
     assert isinstance(result, Channel)
@@ -88,6 +91,12 @@ async def test_text_message(
         result.bot_input.data
         == callback_data["entry"][0]["changes"][0]["value"]["messages"][0]
     )
+    
+    assert isinstance(logger_result, Logger)
+    assert logger_result.source == "api"
+    assert isinstance(logger_result.logger_obj, APILogger)
+    assert logger_result.logger_obj.turn_id == "turn123"
+    assert logger_result.logger_obj.user_id == "user123"
 
     mock_get_active_channel_by_identifier.assert_called_once_with(
         "919876543210", PinnacleWhatsappHandler.get_channel_name()
@@ -177,6 +186,7 @@ async def test_audio_message(
 
     # Assertions
     assert len(result) == 1
+    logger_result = result[0][2]
     assert result[0][0] is None
     result = result[0][1]
     assert isinstance(result, Channel)
@@ -187,6 +197,12 @@ async def test_audio_message(
         result.bot_input.data
         == callback_data["entry"][0]["changes"][0]["value"]["messages"][0]
     )
+
+    assert isinstance(logger_result, Logger)
+    assert logger_result.source == "api"
+    assert isinstance(logger_result.logger_obj, APILogger)
+    assert logger_result.logger_obj.turn_id == "turn123"
+    assert logger_result.logger_obj.user_id == "user123"
 
     mock_get_active_channel_by_identifier.assert_called_once_with(
         "919876543210", PinnacleWhatsappHandler.get_channel_name()
@@ -278,6 +294,7 @@ async def test_button_reply_message(
 
     # Assertions
     assert len(result) == 1
+    logger_result = result[0][2]
     assert result[0][0] is None
     result = result[0][1]
     assert isinstance(result, Channel)
@@ -288,6 +305,12 @@ async def test_button_reply_message(
         result.bot_input.data
         == callback_data["entry"][0]["changes"][0]["value"]["messages"][0]
     )
+
+    assert isinstance(logger_result, Logger)
+    assert logger_result.source == "api"
+    assert isinstance(logger_result.logger_obj, APILogger)
+    assert logger_result.logger_obj.turn_id == "turn123"
+    assert logger_result.logger_obj.user_id == "user123"
 
     mock_get_active_channel_by_identifier.assert_called_once_with(
         "919876543210", PinnacleWhatsappHandler.get_channel_name()
@@ -382,6 +405,7 @@ async def test_list_reply_message(
 
     # Assertions
     assert len(result) == 1
+    logger_result=result[0][2]
     assert result[0][0] is None
     result = result[0][1]
     assert isinstance(result, Channel)
@@ -393,6 +417,12 @@ async def test_list_reply_message(
         == callback_data["entry"][0]["changes"][0]["value"]["messages"][0]
     )
 
+    assert isinstance(logger_result, Logger)
+    assert logger_result.source == "api"
+    assert isinstance(logger_result.logger_obj, APILogger)
+    assert logger_result.logger_obj.turn_id == "turn123"
+    assert logger_result.logger_obj.user_id == "user123"
+    
     mock_get_active_channel_by_identifier.assert_called_once_with(
         "919876543210", PinnacleWhatsappHandler.get_channel_name()
     )

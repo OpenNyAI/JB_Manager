@@ -13,6 +13,8 @@ from lib.data_models import (
     ButtonMessage,
     ListMessage,
     Option,
+    Logger,
+    LanguageLogger
 )
 from lib.model import LanguageCodes
 
@@ -55,8 +57,30 @@ async def test_handle_output_text_message():
         message_type=MessageType.TEXT,
         text=TextMessage(body="hello"),
     )
-    result = await handle_output(turn_id, preferred_language, message)
 
+    language_logger_object = Logger(
+        source = "language",
+        logger_obj = LanguageLogger(
+            id = "1234",
+            turn_id = "turn1",
+            msg_id = "abcd",
+            msg_state = "Outgoing",
+            msg_language = LanguageCodes.EN.value,
+            msg_type = message.message_type.value,
+            translated_to_language = preferred_language,
+            translation_type = "Language translation/ Speech",
+            translation_model = "Dhruva/Azure",
+            response_time = "1.10235457",
+            status = "Success"
+        )
+    )
+    
+    with patch.dict("sys.modules", {"src.extension": mock_extension}):
+        with patch("src.handlers.create_language_logger_input", return_value = language_logger_object):
+            result, language_logger_object_list = await handle_output(turn_id, preferred_language, message)
+
+    assert isinstance(language_logger_object_list, list)
+    assert len(language_logger_object_list) == 2
     assert isinstance(result, list)
     assert len(result) == 2
     assert isinstance(result[0], Channel)
@@ -86,8 +110,30 @@ async def test_handle_output_document_message():
             name="doc.pdf",
         ),
     )
-    result = await handle_output(turn_id, preferred_language, message)
 
+    language_logger_object = Logger(
+        source = "language",
+        logger_obj = LanguageLogger(
+            id = "1234",
+            turn_id = "turn1",
+            msg_id = "abcd",
+            msg_state = "Outgoing/Coming from flow", 
+            msg_language = LanguageCodes.EN.value,
+            msg_type = message.message_type.value,
+            translated_to_language = preferred_language,
+            translation_type = "Text",
+            translation_model = "Dhruva/Azure",
+            response_time = "1.10235457",
+            status = "Success"
+        )
+    )
+    
+    with patch.dict("sys.modules", {"src.extension": mock_extension}):
+        with patch("src.handlers.create_language_logger_input", return_value = language_logger_object):
+            result, language_logger_object_list = await handle_output(turn_id, preferred_language, message)
+
+    assert isinstance(language_logger_object_list, list)
+    assert len(language_logger_object_list) == 1
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], Channel)
@@ -112,8 +158,30 @@ async def test_handle_output_image_message():
             url="http://example.com/image.jpg",
         ),
     )
-    result = await handle_output(turn_id, preferred_language, message)
 
+    language_logger_object = Logger(
+        source = "language",
+        logger_obj = LanguageLogger(
+            id = "1234",
+            turn_id = "turn1",
+            msg_id = "abcd",
+            msg_state = "Outgoing/Text", 
+            msg_language = "Preferred language" + LanguageCodes.EN.value,
+            msg_type = "Image caption/Text",
+            translated_to_language = preferred_language,
+            translation_type = "Text",
+            translation_model = "Dhruva/Azure",
+            response_time = "1.10235457",
+            status = "Success"
+        )
+    )
+    
+    with patch.dict("sys.modules", {"src.extension": mock_extension}):
+        with patch("src.handlers.create_language_logger_input", return_value = language_logger_object):
+            result, language_logger_object_list = await handle_output(turn_id, preferred_language, message)
+
+    assert isinstance(language_logger_object_list, list)
+    assert len(language_logger_object_list) == 1
     assert isinstance(result, list)
     assert len(result) == 1
     assert isinstance(result[0], Channel)
@@ -142,7 +210,30 @@ async def test_handle_output_button_message():
             ],
         ),
     )
-    result = await handle_output(turn_id, preferred_language, message)
+
+    language_logger_object = Logger(
+        source = "language",
+        logger_obj = LanguageLogger(
+            id = "1234",
+            turn_id = "turn1",
+            msg_id = "abcd",
+            msg_state = "Outgoing", 
+            msg_language = "Text/" + LanguageCodes.EN.value,
+            msg_type = message.message_type.value,
+            translated_to_language = preferred_language,
+            translation_type = "Speech/" + message.message_type.value,
+            translation_model = "Dhruva/Azure",
+            response_time = "1.10235457",
+            status = "Success"
+        )
+    )
+    
+    with patch.dict("sys.modules", {"src.extension": mock_extension}):
+        with patch("src.handlers.create_language_logger_input", return_value = language_logger_object):
+            result,language_logger_object_list = await handle_output(turn_id, preferred_language, message)
+
+    assert isinstance(language_logger_object_list, list)
+    assert len(language_logger_object_list) == 2
     assert isinstance(result, list)
     assert len(result) == 2
     assert isinstance(result[0], Channel)

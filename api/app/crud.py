@@ -1,4 +1,5 @@
 from typing import Sequence
+import logging
 import uuid
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
@@ -11,8 +12,10 @@ from lib.models import (
     JBUser,
     JBBot,
     JBChannel,
+    JBApiLogger,
 )
 
+logger = logging.getLogger("jb-manager-api")
 
 async def create_user(
     channel_id: str, phone_number: str, first_name: str, last_name: str

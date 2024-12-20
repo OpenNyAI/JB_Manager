@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from lib.db_session_handler import DBSessionHandler
-from lib.models import JBTurn, JBUser
+from lib.models import JBTurn, JBUser, JBChannelLogger
 
 
 async def get_user_preferred_language(turn_id: str):

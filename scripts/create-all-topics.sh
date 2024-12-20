@@ -16,6 +16,7 @@ kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_FLOW_T
 kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_LANGUAGE_TOPIC --if-not-exists
 kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_CHANNEL_TOPIC --if-not-exists
 kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_RETRIEVER_TOPIC --if-not-exists
+kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_LOGGER_TOPIC --if-not-exists
 kafka-topics.sh --create --bootstrap-server localhost:9092 --topic $KAFKA_INDEXER_TOPIC --if-not-exists
 
 kafka-topics.sh --bootstrap-server localhost:9092 --list

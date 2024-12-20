@@ -55,11 +55,11 @@ if [ -n "$stage" ]; then
   done
   # Run docker-compose with the specified environment file and services
   echo "Running docker-compose with existing images"
-  docker compose --env-file "$env_file" -f "docker-compose.yml" -f docker-compose.stage.yml up $@
+  docker-compose --env-file "$env_file" -f "docker-compose.yml" -f docker-compose.stage.yml up $@
 else
   echo "Building and running docker-compose"
   # Build the services with the specified environment file
   docker compose build $@ --build-arg VITE_SERVER_HOST=$JB_API_SERVER_HOST
   # Run docker-compose with the specified environment file and services
-  docker compose --env-file "$env_file" up $@
+  docker-compose --env-file "$env_file" up $@
 fi

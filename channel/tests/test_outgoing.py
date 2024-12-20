@@ -13,6 +13,8 @@ from lib.data_models import (
     DialogMessage,
     DialogOption,
     Option,
+    Logger,
+    ChannelLogger,
 )
 
 mock_async_storage_instance = MagicMock()
@@ -144,11 +146,17 @@ async def test_send_message_to_user(message):
                 mock_send_message,
             ):
                 with patch("src.handlers.outgoing.create_message", mock_create_message):
-                    await send_message_to_user(turn_id=turn_id, message=message)
-
+                    channel_logger_object = await send_message_to_user(turn_id=turn_id, message=message)
+  
     mock_get_channel_by_turn_id.assert_called_once_with(turn_id=turn_id)
     mock_get_user_by_turn_id.assert_called_once_with(turn_id=turn_id)
     mock_send_message.assert_called_once_with(
         channel=mock_channel, user=mock_user, message=message
     )
     mock_create_message.assert_called_once()
+
+    print("Channel logger object:", channel_logger_object)
+    assert isinstance(channel_logger_object, Logger)
+    assert isinstance(channel_logger_object.logger_obj,ChannelLogger)
+    assert channel_logger_object.logger_obj.turn_id == turn_id
+    assert channel_logger_object.logger_obj.msg_type == message.message_type.value

@@ -25,7 +25,7 @@ async def callback(provider: str, bot_identifier: str, request: Request):
         logger.error("No valid channel found")
         return 404
 
-    async for err, channel_input in handle_callback(
+    async for err, channel_input, api_logger_input in handle_callback(
         bot_identifier=bot_identifier,
         callback_data=data,
         headers=headers,
@@ -33,8 +33,9 @@ async def callback(provider: str, bot_identifier: str, request: Request):
         chosen_channel=chosen_channel,
     ):
         if err:
+            produce_message(api_logger_input)
             raise HTTPException(status_code=400, detail=str(err))
         elif channel_input:
             produce_message(channel_input)
-
+        produce_message(api_logger_input)
     return 200

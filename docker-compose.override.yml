@@ -11,6 +11,10 @@ services:
     build:
       context: .  # Root directory of the project      
       dockerfile: ./flow/Dockerfile
+  logger:
+    build:
+      context: . # Root directory of the project  
+      dockerfile: ./logger/Dockerfile
   indexer:
     build:
       context: .  # Root directory of the project      

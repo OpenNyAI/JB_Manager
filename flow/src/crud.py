@@ -11,6 +11,8 @@ from lib.models import (
     JBMessage,
     JBTurn,
     JBUser,
+    JBChannelLogger,
+    JBApiLogger
 )
 
 
@@ -211,5 +213,25 @@ async def update_user_language(turn_id: str, selected_language: str):
                 .values(language_preference=selected_language)
             )
             await session.execute(stmt)
+            await session.commit()
+            return None
+
+async def get_msg_id_by_turn_id(turn_id: str, msg_intent: str):
+    async with DBSessionHandler.get_async_session() as session:
+        async with session.begin():
+            result = await session.execute(
+                select(JBChannelLogger.id)
+                .where(JBChannelLogger.turn_id == turn_id and JBChannelLogger.msg_intent == msg_intent)
+            )
+            msg_id = result.scalars().first()
+            return msg_id
+
+async def update_api_logger(turn_id: str,session_id: str):
+    async with DBSessionHandler.get_async_session() as session:
+        async with session.begin():
+            query = (
+                update(JBApiLogger).where(JBApiLogger.turn_id == turn_id).values(session_id=session_id)
+            )
+            await session.execute(query)
             await session.commit()
             return None

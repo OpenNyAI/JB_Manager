@@ -59,6 +59,16 @@ az eventhubs eventhub create --name $KAFKA_LANGUAGE_TOPIC \
 --cleanup-policy Delete \
 --status Active
 
+# LOGGER
+az eventhubs eventhub create --name $KAFKA_LOGGER_TOPIC \
+--namespace-name $EVENTHUB_NAMESPACE \
+--resource-group $RESOURCE_GROUP \
+--retention-time 1 \
+--partition-count 1 \
+--enable-capture false \
+--cleanup-policy Delete \
+--status Active
+
 # create a shared policy one each for send and listen
 az eventhubs namespace authorization-rule create --name $EVENTHUB_SEND_POLICY \
 --namespace-name $EVENTHUB_NAMESPACE \

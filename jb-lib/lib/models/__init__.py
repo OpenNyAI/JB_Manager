@@ -292,7 +292,82 @@ class JBForm(Base):
         onupdate=func.now(),
     )
 
+class JBApiLogger(Base):
+    __tablename__ = "jb_api_logger"
 
+    turn_id = Column(String, primary_key=True)
+    user_id = Column(String)
+    session_id = Column(String)  
+    status = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+class JBChannelLogger(Base):
+    __tablename__ = "jb_channel_logger"
+
+    id = Column(String, primary_key=True)
+    turn_id = Column(String, ForeignKey("jb_api_logger.turn_id"))
+    channel_id = Column(String)
+    channel_name = Column(String)
+    msg_intent = Column(String)
+    msg_type = Column(String) 
+    sent_to_service = Column(String)
+    status = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+class JBLanguageLogger(Base):
+    __tablename__ = "jb_language_logger"
+
+    id = Column(String, primary_key=True)
+    turn_id = Column(String, ForeignKey("jb_api_logger.turn_id"))
+    msg_id = Column(String)
+    msg_state = Column(String)
+    msg_language = Column(String)
+    msg_type = Column(String) 
+    translated_to_language = Column(String)
+    translation_type = Column(String)
+    model_for_translation = Column(String)
+    response_time = Column(String)
+    status = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+class JBFlowLogger(Base):
+    __tablename__ = "jb_flow_logger"
+
+    id = Column(String, primary_key=True)
+    turn_id = Column(String, ForeignKey("jb_api_logger.turn_id"))
+    session_id = Column(String)
+    msg_id = Column(String)
+    msg_intent = Column(String)
+    flow_intent = Column(String)
+    sent_to_service = Column(String)
+    status = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+class JBRetrieverLogger(Base):
+    __tablename__ = "jb_retriever_logger"
+
+    id = Column(String, primary_key=True)
+    turn_id = Column(String, ForeignKey("jb_api_logger.turn_id"))
+    msg_id = Column(String)
+    retriever_type = Column(String)
+    collection_name = Column(String)
+    top_chunk_k_value = Column(String)
+    number_of_chunks = Column(String)
+    chunks = Column(ARRAY(String))
+    query = Column(String)
+    status = Column(String)
+    created_at = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+    
 # class LangchainPgCollection(Base):
 #     __tablename__ = 'langchain_pg_collection'
 

@@ -32,6 +32,8 @@ from lib.data_models import (
     ChannelIntent,
     RAG,
     RAGQuery,
+    Logger,
+    FlowLogger,
 )
 
 mock_bot = JBBot(
@@ -375,6 +377,20 @@ fsm_and_assertions = {
     ),
 }
 
+flow_logger_input = Logger(
+    source = "flow",
+    logger_obj = FlowLogger(
+        id = "1234",
+        turn_id = "turn_id",
+        session_id = "session_id",
+        msg_id ="msg_id",
+        msg_intent = "msg_intent",
+        flow_intent = "flow_intent",
+        sent_to_service = "sent_to_service",
+        status = "status",
+    )
+)
+
 test_cases = {
     f"{flow_input.source}_{name}_{input_name}": (flow_input, fsm_output, flow_output)
     for (input_name, flow_input), (name, (fsm_output, flow_output)) in product(
@@ -414,6 +430,7 @@ async def test_handle_flow_input(
     mock_fsm_output,
     flow_output,
 ):
+
     mock_produce_message.reset_mock()
 
     mock_manage_session.return_value = MagicMock(id="test_session_id")
@@ -427,9 +444,11 @@ async def test_handle_flow_input(
 
     from src.handlers.flow_input import handle_flow_input
 
-    await handle_flow_input(flow_input)
+    with patch("src.handlers.bot_input.create_flow_logger_input",return_value=flow_logger_input):
+        await handle_flow_input(flow_input)
 
-    mock_produce_message.assert_called_once_with(flow_output)
+    mock_produce_message.assert_any_call(flow_output)
+    mock_produce_message.assert_any_call(flow_logger_input)
     mock_update_state_and_variables.assert_called_once_with(
         "test_session_id",
         "zerotwo",

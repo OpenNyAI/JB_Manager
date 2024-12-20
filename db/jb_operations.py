@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from lib.models import Base, JBSession, JBTurn, JBUser, JBBot, JBMessage, JBDocumentStoreLog, JBQALog
+from lib.models import Base, JBSession, JBTurn, JBUser, JBBot, JBMessage, JBDocumentStoreLog, JBQALog, JBApiLogger
 import os
 from dotenv import load_dotenv
 
@@ -53,6 +53,11 @@ def create_jb_turn(*, turn_id, session_id, bot_id, turn_type, channel):
 def create_jb_session(*, session_id, pid, bot_id):
     new_session = JBSession(id=session_id, pid=pid, bot_id=bot_id)
     session.add(new_session)
+    session.commit()
+
+def create_jb_api_logger(*, msg_id, user_id, turn_id, session_id, status):
+    new_api_log = JBApiLogger(msg_id=msg_id, user_id=user_id, turn_id=turn_id, session_id=session_id, status=status)
+    session.add(new_api_log)
     session.commit()
 
 # For testing, to add sample data

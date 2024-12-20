@@ -311,6 +311,11 @@
                 },
 
                 {
+                  "name": "KAFKA_LOGGER_TOPIC",
+                  "value": "logger"
+                },
+
+                {
                   "name": "ENCRYPTION_KEY",
                   "value": "[parameters('encryptionKey')]"
                 },
@@ -388,7 +393,10 @@
                   "name": "KAFKA_LANGUAGE_TOPIC",
                   "value": "language"
                 },
-                
+                {
+                  "name": "KAFKA_LOGGER_TOPIC",
+                  "value": "logger"
+                },
                 {
                   "name": "BHASHNI_USER_ID",
                   "value": "[parameters('bhashniUserID')]"
@@ -507,6 +515,10 @@
                 {
                   "name": "KAFKA_LANGUAGE_TOPIC",
                   "value": "language"
+                },
+                {
+                  "name": "KAFKA_LOGGER_TOPIC",
+                  "value": "logger"
                 },
                 {
                   "name": "KAFKA_RETRIEVER_TOPIC",

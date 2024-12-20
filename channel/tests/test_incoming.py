@@ -12,6 +12,8 @@ from lib.data_models import (
     FlowIntent,
     LanguageIntent,
     DialogOption,
+    Logger,
+    ChannelLogger,
 )
 from lib.channel_handler import ChannelHandler
 from src.handlers.incoming import process_incoming_messages
@@ -73,7 +75,6 @@ text_inputs = {
     ),
 }
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "bot_input", list(text_inputs.values()), ids=list(text_inputs.keys())
@@ -88,19 +89,33 @@ async def test_process_incoming_text_message(bot_input, mock_get_channel_by_turn
             intent=ChannelIntent.CHANNEL_IN,
             bot_input=bot_input,
         )
-        result = await process_incoming_messages(
-            turn_id=message.turn_id, bot_input=bot_input
+        channel_logger_object = Logger(
+            source = "channel",
+            logger_obj = ChannelLogger(
+                id = "1234",
+                turn_id = message.turn_id,
+                channel_id =  "test_channel_id",
+                channel_name = "telegram",
+                msg_intent = "Incoming",
+                msg_type = "text",
+                sent_to_service = "Language",
+                status = "Success/Failure"
+            )
         )
-        mock_get_channel_by_turn_id.assert_called_once_with("test_turn_id")
-        assert result is not None
-        assert isinstance(result, Language)
-        assert result.turn_id == "test_turn_id"
-        assert result.intent == LanguageIntent.LANGUAGE_IN
-        assert result.message is not None
-        assert result.message.message_type == MessageType.TEXT
-        assert result.message.text is not None
-        assert result.message.text.body == "How are you?"
+        with patch('src.handlers.incoming.create_channel_logger_input',return_value=channel_logger_object):
+            result, channel_logger_object = await process_incoming_messages(
+                turn_id=message.turn_id, bot_input=bot_input
+            )
+            mock_get_channel_by_turn_id.assert_called_once_with("test_turn_id")
 
+            assert result is not None
+            assert isinstance(result, Language)
+            assert result.turn_id == "test_turn_id"
+            assert result.intent == LanguageIntent.LANGUAGE_IN
+            assert result.message is not None
+            assert result.message.message_type == MessageType.TEXT
+            assert result.message.text is not None
+            assert result.message.text.body == "How are you?"
 
 audio_messages = {
     "pinnacle_whatsapp": RestBotInput(
@@ -151,14 +166,28 @@ async def test_process_incoming_audio_message(
         bot_input=bot_input,
     )
 
+    channel_logger_object = Logger(
+        source = "channel",
+        logger_obj = ChannelLogger(
+            id = "1234",
+            turn_id = message.turn_id,
+            channel_id =  "test_channel_id",
+            channel_name = "telegram",
+            msg_intent = "Incoming",
+            msg_type = "text",
+            sent_to_service = "Language",
+            status = "Success/Failure"
+        )
+    )
+
     with patch(
         "src.handlers.incoming.get_channel_by_turn_id", mock_get_channel_by_turn_id
     ):
         with patch(
             "lib.file_storage.StorageHandler.get_async_instance",
             return_value=mock_async_storage_instance,
-        ):
-            result = await process_incoming_messages(
+        ), patch('src.handlers.incoming.create_channel_logger_input',return_value=channel_logger_object):
+            result, channel_logger_object = await process_incoming_messages(
                 turn_id=message.turn_id, bot_input=bot_input
             )
         mock_async_storage_instance.write_file.assert_called_once_with(
@@ -218,10 +247,25 @@ async def test_process_incoming_interactive_message(
         intent=ChannelIntent.CHANNEL_IN,
         bot_input=bot_input,
     )
+
+    channel_logger_object = Logger(
+        source = "channel",
+            logger_obj = ChannelLogger(
+            id = "1234",
+            turn_id = message.turn_id,
+            channel_id =  "test_channel_id",
+            channel_name = "telegram",
+            msg_intent = "Incoming",
+            msg_type = "text",
+            sent_to_service = "Language",
+            status = "Success/Failure"
+        )
+    )
+    
     with patch(
         "src.handlers.incoming.get_channel_by_turn_id", mock_get_channel_by_turn_id
-    ):
-        result = await process_incoming_messages(
+    ), patch('src.handlers.incoming.create_channel_logger_input',return_value=channel_logger_object):
+        result, channel_logger_object= await process_incoming_messages(
             turn_id=message.turn_id, bot_input=bot_input
         )
     assert result is not None
@@ -289,10 +333,24 @@ async def test_process_incoming_language_selection_message(
         intent=ChannelIntent.CHANNEL_IN,
         bot_input=bot_input,
     )
+
+    channel_logger_object = Logger(
+        source = "channel",
+            logger_obj = ChannelLogger(
+            id = "1234",
+            turn_id = message.turn_id,
+            channel_id =  "test_channel_id",
+            channel_name = "telegram",
+            msg_intent = "Incoming",
+            msg_type = "text",
+            sent_to_service = "Language",
+            status = "Success/Failure"
+        )
+    )
     with patch(
         "src.handlers.incoming.get_channel_by_turn_id", mock_get_channel_by_turn_id
-    ):
-        result = await process_incoming_messages(
+    ), patch('src.handlers.incoming.create_channel_logger_input',return_value=channel_logger_object):
+        result, channel_logger_object = await process_incoming_messages(
             turn_id=message.turn_id, bot_input=bot_input
         )
 
@@ -340,10 +398,23 @@ async def test_process_incoming_form_message(bot_input, mock_get_channel_by_turn
         intent=ChannelIntent.CHANNEL_IN,
         bot_input=bot_input,
     )
+    channel_logger_object = Logger(
+        source = "channel",
+            logger_obj = ChannelLogger(
+            id = "1234",
+            turn_id = message.turn_id,
+            channel_id =  "test_channel_id",
+            channel_name = "telegram",
+            msg_intent = "Incoming",
+            msg_type = "text",
+            sent_to_service = "Language",
+            status = "Success/Failure"
+        )
+    )
     with patch(
         "src.handlers.incoming.get_channel_by_turn_id", mock_get_channel_by_turn_id
-    ):
-        result = await process_incoming_messages(
+    ), patch('src.handlers.incoming.create_channel_logger_input',return_value=channel_logger_object):
+        result, channel_logger_object = await process_incoming_messages(
             turn_id=message.turn_id, bot_input=bot_input
         )
     assert result is not None

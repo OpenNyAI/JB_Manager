@@ -1,4 +1,5 @@
 import base64
+import uuid
 import logging
 from lib.data_models import (
     RestBotInput,
@@ -11,6 +12,8 @@ from lib.data_models import (
     Language,
     LanguageIntent,
     AudioMessage,
+    Logger,
+    ChannelLogger,
 )
 from lib.channel_handler import channel_map, ChannelHandler
 from lib.file_storage import StorageHandler
@@ -20,6 +23,30 @@ logging.basicConfig()
 logger = logging.getLogger("channel")
 logger.setLevel(logging.INFO)
 
+async def create_channel_logger_input(turn_id: str, 
+                                      channel_id: str, 
+                                      channel_name: str,
+                                      message_type: str, 
+                                      sent_to_service: str):
+    if message_type == "Not Implemented":
+        status = "Message object not created"
+    else:
+        status = "Success"
+    id = str(uuid.uuid4())
+    channel_logger_input = Logger(
+            source = "channel",
+            logger_obj = ChannelLogger(
+                    id = id,
+                    turn_id = turn_id,
+                    channel_id = channel_id,
+                    channel_name = channel_name,
+                    msg_intent = "Incoming",
+                    msg_type = message_type,
+                    sent_to_service = sent_to_service,
+                    status = status
+            )
+    )
+    return channel_logger_input
 
 async def process_incoming_messages(turn_id: str, bot_input: RestBotInput):
     """Process incoming messages"""
@@ -68,7 +95,14 @@ async def process_incoming_messages(turn_id: str, bot_input: RestBotInput):
             dialog=dialog_message,
         )
     else:
-        return NotImplemented
+        channel_logger_object = await create_channel_logger_input(
+            turn_id=turn_id, 
+            channel_id=jb_channel.id, 
+            channel_name=jb_channel.name, 
+            message_type="Not Implemented", 
+            sent_to_service = ""
+        )
+        return NotImplemented, channel_logger_object
 
     logger.info("Got a message: %s", message)
     if message:
@@ -80,7 +114,14 @@ async def process_incoming_messages(turn_id: str, bot_input: RestBotInput):
                 intent=LanguageIntent.LANGUAGE_IN,
                 message=message,
             )
-            return language_input
+            channel_logger_object = await create_channel_logger_input(
+                turn_id=turn_id, 
+                channel_id=jb_channel.id, 
+                channel_name=jb_channel.name, 
+                message_type=message.message_type.value, 
+                sent_to_service = "Language"
+            )
+            return language_input, channel_logger_object
         else:
             if message_type == MessageType.DIALOG:
                 flow_input = Flow(
@@ -94,4 +135,11 @@ async def process_incoming_messages(turn_id: str, bot_input: RestBotInput):
                     intent=FlowIntent.USER_INPUT,
                     user_input=UserInput(turn_id=turn_id, message=message),
                 )
-            return flow_input
+            channel_logger_object = await create_channel_logger_input(
+                turn_id=turn_id, 
+                channel_id=jb_channel.id, 
+                channel_name=jb_channel.name, 
+                message_type=message.message_type.value, 
+                sent_to_service = "Flow"
+            )
+            return flow_input, channel_logger_object

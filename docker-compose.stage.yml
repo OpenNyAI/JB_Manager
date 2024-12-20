@@ -5,6 +5,8 @@ services:
     image: opennyaiin/jugalbandi-manager:language-latest
   flow:
     image: opennyaiin/jugalbandi-manager:flow-latest
+  logger:
+    image: opennyaiin/jugalbandi-manager:logger-latest
   indexer:
     build:
       context: .  # Root directory of the project      

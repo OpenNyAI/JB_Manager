@@ -2,20 +2,20 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
+from lib.data_models import Logger,RetrieverLogger
 
 # Mock environment variables
 @pytest.fixture(autouse=True)
 def mock_env_vars(monkeypatch):
-    monkeypatch.setenv("KAFKA_BROKER", "kafka_broker")
+    monkeypatch.setenv("KAFKA_BROKER", "kafka:9092")
     monkeypatch.setenv("KAFKA_RETRIEVER_TOPIC", "retriever_topic")
     monkeypatch.setenv("KAFKA_FLOW_TOPIC", "flow_topic")
+    monkeypatch.setenv("KAFKA_LOGGER_TOPIC", "logger_topic")
     monkeypatch.setenv("POSTGRES_DATABASE_NAME", "test_db")
     monkeypatch.setenv("POSTGRES_DATABASE_USERNAME", "test_user")
     monkeypatch.setenv("POSTGRES_DATABASE_PASSWORD", "test_password")
     monkeypatch.setenv("POSTGRES_DATABASE_HOST", "localhost")
     monkeypatch.setenv("POSTGRES_DATABASE_PORT", "5432")
-
 
 @pytest.mark.asyncio
 async def test_r2r_querying():
@@ -25,9 +25,25 @@ async def test_r2r_querying():
     mock_search_result = {"vector_search_results": [{"metadata": {"text": "test"}}]}
     mock_r2r_app.engine.asearch = AsyncMock(return_value=mock_search_result)
 
+    retriever_logger_object= Logger(
+        source = "retriever",
+        logger_obj = RetrieverLogger(
+            id = "1234",
+            turn_id = "turn_id",
+            msg_id = "abcd",
+            retriever_type = "r2r",
+            collection_name = "collection_name",
+            top_chunk_k_value= "5",
+            number_of_chunks = "400",
+            chunks = ["chunk1", "chunk2"],
+            query = "query",
+            status = "Success",
+        )
+    )
+    
     with patch("main.get_r2r", return_value=mock_r2r_app), patch(
         "main.send_message", MagicMock()
-    ) as mock_send_message:
+    ) as mock_send_message, patch("main.create_retriever_logger_input", return_value=retriever_logger_object):
         await querying(
             type="r2r",
             turn_id="turn_id",
@@ -48,9 +64,25 @@ async def test_default_querying():
     mock_documents = [MagicMock(page_content="test_content", metadata={"key": "value"})]
     mock_pgvector_instance.similarity_search = MagicMock(return_value=mock_documents)
 
+    retriever_logger_object= Logger(
+        source = "retriever",
+        logger_obj = RetrieverLogger(
+            id = "1234",
+            turn_id = "turn_id",
+            msg_id = "abcd",
+            retriever_type = "default",
+            collection_name = "collection_name",
+            top_chunk_k_value= "5",
+            number_of_chunks = "400",
+            chunks = ["chunk1", "chunk2"],
+            query = "query",
+            status = "Success",
+        )
+    )
+
     with patch("main.PGVector", return_value=mock_pgvector_instance), patch(
         "main.get_embeddings", return_value=MagicMock()
-    ), patch("main.send_message", MagicMock()) as mock_send_message:
+    ), patch("main.send_message", MagicMock()) as mock_send_message, patch("main.create_retriever_logger_input", return_value=retriever_logger_object):
         await querying(
             type="default",
             turn_id="turn_id",

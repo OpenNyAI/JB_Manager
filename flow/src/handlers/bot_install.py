@@ -4,11 +4,12 @@ import shutil
 import logging
 import subprocess
 from pathlib import Path
+from ..extensions import produce_message
 from lib.data_models import BotConfig, BotIntent
 from ..crud import create_bot
+from .bot_input import create_flow_logger_input
 
 logger = logging.getLogger("flow")
-
 
 async def install_bot(
     bot_id: str, bot_fsm_code: str, bot_requirements_txt: str, index_urls: List[str]
@@ -84,4 +85,13 @@ async def handle_bot(bot_config: BotConfig):
             version=bot_config.bot.version,
         )
     else:
+        flow_logger_object = await create_flow_logger_input(
+            turn_id="", 
+            session_id="", 
+            msg_intent = "Incoming", 
+            flow_intent = "Bot", 
+            sent_to_service="",
+            status="Invalid intent in bot config"
+        )
+        produce_message(flow_logger_object)
         logger.error("Invalid intent in bot config")

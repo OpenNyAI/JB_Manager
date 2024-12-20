@@ -18,6 +18,7 @@ from lib.data_models import (
     Flow,
     Language,
     LanguageIntent,
+    Logger,
 )
 from lib.kafka_utils import KafkaConsumer, KafkaProducer
 from lib.model import LanguageCodes
@@ -31,6 +32,7 @@ kafka_broker = os.getenv("KAFKA_BROKER")
 flow_topic = os.getenv("KAFKA_FLOW_TOPIC")
 language_topic = os.getenv("KAFKA_LANGUAGE_TOPIC")
 channel_topic = os.getenv("KAFKA_CHANNEL_TOPIC")
+logger_topic = os.getenv("KAFKA_LOGGER_TOPIC")
 
 logger.info("Connecting with topic: %s", language_topic)
 
@@ -42,9 +44,14 @@ producer = KafkaProducer.from_env_vars()
 logger.info("Connected with topic: %s", language_topic)
 
 
-def send_message(data: Flow | Channel):
+def send_message(data: Flow | Channel | Logger):
     """Sends message to Kafka topic"""
-    topic = flow_topic if isinstance(data, Flow) else channel_topic
+    if isinstance(data, Flow):
+        topic = flow_topic 
+    elif isinstance(data,Logger):
+        topic = logger_topic 
+    else:
+        topic = channel_topic
     msg = data.model_dump_json()
     logger.info("Sending message to %s topic: %s", topic, msg)
     producer.send_message(topic, msg)
@@ -52,6 +59,8 @@ def send_message(data: Flow | Channel):
 
 async def handle_incoming_message(language_input: Language, callback: Callable):
     """Handler for Language Input"""
+    language_logger_inputs : List[Logger]
+    logger_object: Logger
     turn_id = language_input.turn_id
     message_intent = language_input.intent
 
@@ -66,7 +75,7 @@ async def handle_incoming_message(language_input: Language, callback: Callable):
 
     if message_intent == LanguageIntent.LANGUAGE_IN:
         message = language_input.message
-        flow_input = await handle_input(
+        flow_input, language_logger_inputs = await handle_input(
             turn_id=turn_id,
             preferred_language=preferred_language,
             message=message,
@@ -76,12 +85,15 @@ async def handle_incoming_message(language_input: Language, callback: Callable):
     elif message_intent == LanguageIntent.LANGUAGE_OUT:
         turn_id = language_input.turn_id
         message = language_input.message
-        channel_inputs: List[Channel] = await handle_output(
+        channel_inputs: List[Channel] 
+        channel_inputs, language_logger_inputs= await handle_output(
             turn_id=turn_id, preferred_language=preferred_language, message=message
         )
         for channel_input in channel_inputs:
             callback(channel_input)
-
+        
+    for logger_object in language_logger_inputs:
+        callback(logger_object)
 
 async def start():
     """Starts the language service."""

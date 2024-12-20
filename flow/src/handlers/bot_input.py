@@ -1,4 +1,5 @@
 import logging
+import uuid
 import json
 import subprocess
 from datetime import datetime
@@ -22,6 +23,8 @@ from lib.data_models import (
     UserInput,
     Callback,
     CallbackType,
+    Logger,
+    FlowLogger,
 )
 from ..crud import (
     get_bot_by_session_id,
@@ -35,13 +38,46 @@ from ..crud import (
     update_turn,
     update_user_language,
     insert_jb_webhook_reference,
+    update_api_logger,
 )
 from ..extensions import produce_message
+from ..crud import get_msg_id_by_turn_id
 
 logger = logging.getLogger("flow")
 
+async def create_flow_logger_input(
+        turn_id: str, 
+        session_id: str, 
+        msg_intent: str, 
+        flow_intent: str, 
+        sent_to_service: str,
+        status: str):
 
-def handle_bot_output(fsm_output: FSMOutput, turn_id: str):
+    id = str(uuid.uuid4())
+    if msg_intent == "Incoming":
+        msg_id = await get_msg_id_by_turn_id(turn_id = turn_id, msg_intent = msg_intent)
+        if msg_id is None :
+            msg_id = ""
+    else:
+        msg_id = str(uuid.uuid4())
+    
+    flow_logger_input = Logger(
+        source = "flow",
+        logger_obj = FlowLogger(
+            id = id,
+            turn_id = turn_id,
+            session_id = session_id,
+            msg_id =msg_id,
+            msg_intent = msg_intent,
+            flow_intent = flow_intent,
+            sent_to_service = sent_to_service,
+            status = status,
+        )
+    )
+    return flow_logger_input
+
+async def handle_bot_output(fsm_output: FSMOutput, turn_id: str, session_id: str, flow_intent: str):
+    flow_logger_object: Logger
     intent = fsm_output.intent
     if intent == FSMIntent.SEND_MESSAGE:
         message = fsm_output.message
@@ -106,9 +142,33 @@ def handle_bot_output(fsm_output: FSMOutput, turn_id: str):
         )
     else:
         logger.error("Invalid intent in fsm output")
-        return NotImplemented
+        flow_logger_object = await create_flow_logger_input(
+            turn_id=turn_id, 
+            session_id=session_id, 
+            msg_intent = "Not Implemented", 
+            flow_intent = "Not Implemented", 
+            sent_to_service="",
+            status="Invalid intent in fsm output"
+        )
+        return NotImplemented, flow_logger_object
+    
     logger.info("Output to %s: %s", destination, flow_output)
-    return flow_output
+    if isinstance(flow_output, Flow) or isinstance(flow_output, RAG):
+        msg_intent = "Incoming"
+        sent_to_service = "Flow" if isinstance(flow_output, Flow) else "Retriever"
+    elif isinstance(flow_output, Channel) or isinstance(flow_output, Language):
+        msg_intent = "Outgoing"
+        sent_to_service = "Channel" if isinstance(flow_output, Channel) else "Language"
+
+    flow_logger_object = await create_flow_logger_input(
+            turn_id=turn_id, 
+            session_id=session_id, 
+            msg_intent = msg_intent, 
+            flow_intent = flow_intent, 
+            sent_to_service=sent_to_service,
+            status="Success"
+        )
+    return flow_output, flow_logger_object
 
 
 async def manage_session(turn_id: str, new_session: bool = False):
@@ -129,6 +189,7 @@ async def manage_session(turn_id: str, new_session: bool = False):
             logger.info("Updating session for turn_id: %s", turn_id)
             await update_session(session.id)
             await update_turn(session_id=session.id, turn_id=turn_id)
+    await update_api_logger(turn_id=turn_id, session_id= session.id)
     return session
 
 
@@ -219,6 +280,19 @@ async def handle_user_input(user_input: UserInput):
             return
         form_response = json.dumps(message.form_reply.form_data)
         fsm_input = FSMInput(user_input=form_response)
+    elif message_type == MessageType.DOCUMENT:
+        if not message.document:
+            logger.error("Document not found in user input")
+            return
+        document_url = message.document.url
+        fsm_input = FSMInput(user_input=document_url)
+    elif message_type == MessageType.IMAGE:
+        if not message.image:
+            logger.error("Image not found in user input")
+            return
+        image_url = message.image.url
+        logger.info(f"IMAGE URL: {image_url}, {type(image_url)}")
+        fsm_input = FSMInput(user_input=image_url)
     else:
         return NotImplemented
 
@@ -227,21 +301,20 @@ async def handle_user_input(user_input: UserInput):
         turn_id=turn_id,
         message_type=message_type.value,
         is_user_sent=True,
-        message=json.loads(
-            getattr(message, message.message_type.value).model_dump_json(
-                exclude_none=True
-            )
+        message=getattr(message, message.message_type.value).model_dump_json(
+            exclude_none=True
         ),
     )
     session = await manage_session(turn_id=turn_id)
     session_id: str = session.id
     async for fsm_output in handle_bot_input(fsm_input, session_id=session_id):
-        if fsm_output.intent == FSMIntent.WEBHOOK:
-            reference_id = fsm_output.webhook.reference_id
-            insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
-        else:
-            flow_output = handle_bot_output(fsm_output, turn_id=turn_id)
-            produce_message(flow_output)
+        # if fsm_output.intent == FSMIntent.WEBHOOK:
+        #     reference_id = fsm_output.webhook.reference_id
+        #     insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
+        # else:
+        flow_output, flow_logger_object = await handle_bot_output(fsm_output, turn_id=turn_id, session_id=session_id, flow_intent = "User_input")
+        produce_message(flow_output)
+        produce_message(flow_logger_object)
 
 
 async def handle_callback_input(callback: Callback):
@@ -263,12 +336,13 @@ async def handle_callback_input(callback: Callback):
     session = await manage_session(turn_id=turn_id)
     session_id: str = session.id
     async for fsm_output in handle_bot_input(fsm_input, session_id=session_id):
-        if fsm_output.intent == FSMIntent.WEBHOOK:
-            reference_id = fsm_output.webhook.reference_id
-            insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
-        else:
-            flow_output = handle_bot_output(fsm_output, turn_id=turn_id)
-            produce_message(flow_output)
+        # if fsm_output.intent == FSMIntent.WEBHOOK:
+        #     reference_id = fsm_output.webhook.reference_id
+        #     insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
+        # else:
+        flow_output, flow_logger_object = await handle_bot_output(fsm_output, turn_id=turn_id, session_id=session_id, flow_intent = "Callback")
+        produce_message(flow_output)
+        produce_message(flow_logger_object)
 
 
 async def handle_dialog_input(dialog: Dialog):
@@ -291,9 +365,10 @@ async def handle_dialog_input(dialog: Dialog):
     session = await manage_session(turn_id=turn_id, new_session=new_session)
     session_id: str = session.id
     async for fsm_output in handle_bot_input(fsm_input, session_id=session_id):
-        if fsm_output.intent == FSMIntent.WEBHOOK:
-            reference_id = fsm_output.webhook.reference_id
-            insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
-        else:
-            flow_output = handle_bot_output(fsm_output, turn_id=turn_id)
-            produce_message(flow_output)
+        # if fsm_output.intent == FSMIntent.WEBHOOK:
+        #     reference_id = fsm_output.webhook.reference_id
+        #     insert_jb_webhook_reference(reference_id=reference_id, turn_id=turn_id)
+        # else:
+        flow_output, flow_logger_object = await handle_bot_output(fsm_output, turn_id=turn_id, session_id=session_id, flow_intent = "Dialog")
+        produce_message(flow_output)
+        produce_message(flow_logger_object)
